@@ -1,0 +1,2 @@
+class HybridAgent:
+    pass

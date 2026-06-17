@@ -1,0 +1,10 @@
+carla==0.9.13
+gym==0.26.2
+numpy
+opencv-python
+tensorflow
+torch
+stable-baselines3
+pandas
+matplotlib
+pyyaml
