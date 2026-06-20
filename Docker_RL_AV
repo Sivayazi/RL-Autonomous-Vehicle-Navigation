@@ -1,0 +1,80 @@
+#Build
+docker build -t rl-carla-nav .
+
+#Windoes/mac
+docker run --rm -it \
+  -e CARLA_HOST=host.docker.internal \
+  -e CARLA_PORT=2000 \
+  rl-carla-nav
+
+#Linux
+docker run --rm -it \
+  --network host \
+  rl-carla-nav
+version: "3.9"
+
+services:
+  rl-agent:
+    build: .
+    container_name: rl-carla-nav
+    network_mode: host
+    #volumes:
+    #  - ./results:/app/results
+    #  - ./logs:/app/logs
+    #command: python scripts/train_ddqn.py
+    command: python -c "print('Hi')"
+FROM python:3.8-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+# System packages required by OpenCV and CARLA
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
+    git \
+    wget \
+    curl \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgl1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN pip install --upgrade pip setuptools wheel
+
+# Copy requirements first for layer caching
+#COPY requirements.txt .
+
+# Install CARLA first
+RUN pip install carla==0.9.13
+
+# Install remaining dependencies
+RUN pip install \
+    gym==0.26.2 \
+    numpy \
+    opencv-python-headless \
+    tensorflow \
+    torch \
+    stable-baselines3 \
+    pandas \
+    matplotlib \
+    pyyaml
+
+# Copy source code
+COPY . .
+
+# Create runtime directories
+RUN mkdir -p logs results checkpoints
+
+# Python module path
+ENV PYTHONPATH=/app
+
+# Default training entrypoint
+CMD ["python", "scripts/train_ddqn.py"]
+docker compose up --build
